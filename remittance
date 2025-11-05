@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonGo Remit - 프로토타입</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 60%;
+            width: 80%;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: -1;
+        }
+
+        .step.active:not(:last-child)::after {
+            background: #667eea;
+        }
+
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step.active .step-circle,
+        .step.completed .step-circle {
+            background: #667eea;
+        }
+
+        .step-label {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-with-unit {
+            position: relative;
+        }
+
+        .input-with-unit input {
+            padding-right: 60px;
+        }
+
+        .unit {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+        }
+
+        .conversion-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .conversion-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .conversion-row:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 2px solid #dee2e6;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .conversion-label {
+            color: #666;
+        }
+
+        .conversion-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .rate-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .summary-card {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #333;
+            text-align: right;
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            animation: scaleIn 0.3s;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .success-message {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .success-message h2 {
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .success-message p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .transaction-hash {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .transaction-hash label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .transaction-hash code {
+            font-family: monospace;
+            font-size: 11px;
+            color: #667eea;
+            word-break: break-all;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .exchange-logo {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .exchange-logo strong {
+            color: #667eea;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 MonGo Remit</h1>
+            <p>한국 ↔️ 몽골 스테이블코인 송금</p>
+        </div>
+
+        <div class="content">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">금액 입력</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">확인</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">완료</div>
+                </div>
+            </div>
+
+            <!-- Screen 1: Input -->
+            <div class="screen active" id="screen1">
+                <div class="form-group">
+                    <label>수신자 지갑 주소</label>
+                    <input type="text" id="recipientAddress" placeholder="0x..." value="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb">
+                </div>
+
+                <div class="form-group">
+                    <label>송금 금액</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="amountMNT" placeholder="0" value="1000000">
+                        <span class="unit">MNT</span>
+                    </div>
+                </div>
+
+                <div class="rate-info">
+                    📊 현재 환율: 1 USDT = 3,390 MNT (실시간)
+                </div>
+
+                <div class="conversion-box">
+                    <div class="conversion-row">
+                        <span class="conversion-label">송금 금액</span>
+                        <span class="conversion-value" id="displayAmount">1,000,000 MNT</span>
+                    </div>
+                    <div class="conversion-row">
+                        <span class="conversion-label">환산 금액</span>
+                        <span class="conversion-value" id="displayUSDT">295.00 USDT</span>
+                    </div>
+                    <div class="conversion-row">
+                        <span class="conversion-label">수수료 (2%)</span>
+                        <span class="conversion-value" id="displayFee">20,000 MNT</span>
+                    </div>
+                    <div class="conversion-row">
+                        <span class="conversion-label">가스비</span>
+                        <span class="conversion-value" id="displayGas">170 MNT</span>
+                    </div>
+                    <div class="conversion-row">
+                        <span class="conversion-label">총 금액</span>
+                        <span class="conversion-value" id="displayTotal">1,020,170 MNT</span>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    ⚠️ 거래소 연동 시 실시간 환율이 적용됩니다
+                </div>
+
+                <button class="btn btn-primary" onclick="goToConfirm()">다음</button>
+            </div>
+
+            <!-- Screen 2: Confirm -->
+            <div class="screen" id="screen2">
+                <h3 style="margin-bottom: 20px; color: #333;">송금 정보 확인</h3>
+
+                <div class="summary-card">
+                    <div class="summary-row">
+                        <span class="summary-label">수신자</span>
+                        <span class="summary-value wallet-address" id="confirmRecipient"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">송금 금액</span>
+                        <span class="summary-value" id="confirmAmount"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">환산 금액</span>
+                        <span class="summary-value" id="confirmUSDT"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">수수료</span>
+                        <span class="summary-value" id="confirmFee"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">총 금액</span>
+                        <span class="summary-value" style="color: #667eea; font-size: 18px;" id="confirmTotal"></span>
+                    </div>
+                </div>
+
+                <div class="exchange-logo">
+                    <p style="margin-bottom: 10px; color: #666;">거래소 파트너</p>
+                    <strong>🏦 [몽골 거래소명]</strong>
+                    <p style="margin-top: 10px; font-size: 12px; color: #999;">API를 통한 실시간 환전 처리</p>
+                </div>
+
+                <div class="rate-info">
+                    ⏱️ 예상 처리 시간: 3-5분
+                </div>
+
+                <button class="btn btn-primary" onclick="processTransaction()">송금하기</button>
+                <button class="btn btn-secondary" onclick="goToInput()">수정</button>
+            </div>
+
+            <!-- Screen 3: Processing -->
+            <div class="screen" id="screen3">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <h3 style="color: #333; margin-bottom: 10px;">송금 처리 중...</h3>
+                    <p class="loading-text" id="processingStatus">거래소 환전 중</p>
+                </div>
+
+                <div class="conversion-box">
+                    <div class="conversion-row">
+                        <span class="conversion-label">✓ MNT 잔액 차감</span>
+                        <span class="conversion-value" style="color: #4caf50;">완료</span>
+                    </div>
+                    <div class="conversion-row">
+                        <span class="conversion-label" id="status2">⏳ USDT 환전</span>
+                        <span class="conversion-value" id="status2-value">처리 중...</span>
+                    </div>
+                    <div class="conversion-row">
+                        <span class="conversion-label" id="status3">⏳ 블록체인 전송</span>
+                        <span class="conversion-value" id="status3-value">대기 중...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 4: Complete -->
+            <div class="screen" id="screen4">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+
+                <div class="success-message">
+                    <h2>송금 완료!</h2>
+                    <p>거래가 성공적으로 처리되었습니다</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-row">
+                        <span class="summary-label">송금 금액</span>
+                        <span class="summary-value" id="finalAmount"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">전송 금액</span>
+                        <span class="summary-value" id="finalUSDT"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">처리 시간</span>
+                        <span class="summary-value">3분 42초</span>
+                    </div>
+                </div>
+
+                <div class="transaction-hash">
+                    <label>트랜잭션 해시</label>
+                    <code>0xa7f8d9e2b3c4f5a6e8d9c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8</code>
+                </div>
+
+                <div class="rate-info">
+                    🔗 Polygonscan에서 확인하기
+                </div>
+
+                <button class="btn btn-primary" onclick="resetDemo()">새 송금하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 1;
+        const MNT_TO_USDT_RATE = 3390;
+
+        // Update calculations in real-time
+        document.getElementById('amountMNT').addEventListener('input', function(e) {
+            const amountMNT = parseFloat(e.target.value) || 0;
+            updateCalculations(amountMNT);
+        });
+
+        function updateCalculations(amountMNT) {
+            const amountUSDT = amountMNT / MNT_TO_USDT_RATE;
+            const fee = amountMNT * 0.02;
+            const gasFee = 170;
+            const total = amountMNT + fee + gasFee;
+
+            document.getElementById('displayAmount').textContent = formatNumber(amountMNT) + ' MNT';
+            document.getElementById('displayUSDT').textContent = amountUSDT.toFixed(2) + ' USDT';
+            document.getElementById('displayFee').textContent = formatNumber(fee) + ' MNT';
+            document.getElementById('displayGas').textContent = formatNumber(gasFee) + ' MNT';
+            document.getElementById('displayTotal').textContent = formatNumber(total) + ' MNT';
+        }
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString();
+        }
+
+        function goToConfirm() {
+            const amountMNT = parseFloat(document.getElementById('amountMNT').value) || 0;
+            const recipient = document.getElementById('recipientAddress').value;
+
+            if (amountMNT < 10000) {
+                alert('최소 송금액은 10,000 MNT입니다.');
+                return;
+            }
+
+            if (!recipient || recipient.length < 10) {
+                alert('올바른 지갑 주소를 입력하세요.');
+                return;
+            }
+
+            const amountUSDT = amountMNT / MNT_TO_USDT_RATE;
+            const fee = amountMNT * 0.02;
+            const gasFee = 170;
+            const total = amountMNT + fee + gasFee;
+
+            document.getElementById('confirmRecipient').textContent = recipient;
+            document.getElementById('confirmAmount').textContent = formatNumber(amountMNT) + ' MNT';
+            document.getElementById('confirmUSDT').textContent = amountUSDT.toFixed(2) + ' USDT';
+            document.getElementById('confirmFee').textContent = formatNumber(fee + gasFee) + ' MNT';
+            document.getElementById('confirmTotal').textContent = formatNumber(total) + ' MNT';
+
+            showScreen(2);
+        }
+
+        function goToInput() {
+            showScreen(1);
+        }
+
+        function processTransaction() {
+            showScreen(3);
+
+            // Simulate processing steps
+            setTimeout(() => {
+                document.getElementById('status2').innerHTML = '✓ USDT 환전';
+                document.getElementById('status2-value').innerHTML = '<span style="color: #4caf50;">완료</span>';
+                document.getElementById('processingStatus').textContent = '블록체인 전송 중';
+            }, 2000);
+
+            setTimeout(() => {
+                document.getElementById('status3').innerHTML = '✓ 블록체인 전송';
+                document.getElementById('status3-value').innerHTML = '<span style="color: #4caf50;">완료</span>';
+                document.getElementById('processingStatus').textContent = '거래 확인 중';
+            }, 4000);
+
+            setTimeout(() => {
+                const amountMNT = parseFloat(document.getElementById('amountMNT').value) || 0;
+                const amountUSDT = amountMNT / MNT_TO_USDT_RATE;
+
+                document.getElementById('finalAmount').textContent = formatNumber(amountMNT) + ' MNT';
+                document.getElementById('finalUSDT').textContent = amountUSDT.toFixed(2) + ' USDT';
+
+                showScreen(4);
+            }, 6000);
+        }
+
+        function showScreen(screenNumber) {
+            // Hide all screens
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('screen' + i).classList.remove('active');
+                document.getElementById('step' + Math.min(i, 3)).classList.remove('active', 'completed');
+            }
+
+            // Show current screen
+            document.getElementById('screen' + screenNumber).classList.add('active');
+
+            // Update step indicator
+            for (let i = 1; i <= Math.min(screenNumber, 3); i++) {
+                if (i < screenNumber) {
+                    document.getElementById('step' + i).classList.add('completed');
+                } else {
+                    document.getElementById('step' + i).classList.add('active');
+                }
+            }
+
+            currentScreen = screenNumber;
+        }
+
+        function resetDemo() {
+            showScreen(1);
+            document.getElementById('amountMNT').value = '1000000';
+            updateCalculations(1000000);
+        }
+
+        // Initialize
+        updateCalculations(1000000);
+    </script>
+</body>
+</html>
